@@ -2,9 +2,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
-from specutils.spectra import Spectrum1D, SpectralRegion
-from specutils.manipulation import extract_region
-from specutils.fitting import fit_generic_continuum
+
+from .Spectrum import Spectrum
 
 class Cube:
     def __init__(self, path=None):
@@ -45,7 +44,7 @@ class Cube:
             mask = pix_ap.to_mask(method='exact')
 
             # initialize spectrum array
-            spectrum = np.zeros(self.nchan)
+            spectrum_flux = np.zeros(self.nchan)
 
             # extract the 1D spectrum
             for i in range(self.nchan):
@@ -54,9 +53,10 @@ class Cube:
                 # extract the data in the aperture
                 ap_data = mask.get_values(chan)
                 # sum to get value for spectrum
-                spectrum[i] = np.nansum(ap_data)
+                spectrum_flux[i] = np.nansum(ap_data)
 
             # append to list of extracted spectra
+            spectrum = Spectrum(self.wvl, spectrum_flux)
             spec_list.append(spectrum)
         
         self.spectra = spec_list
