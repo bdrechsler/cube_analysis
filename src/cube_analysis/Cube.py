@@ -76,6 +76,19 @@ class Cube:
 
     def extract_spectrum(self, sky_aps):
 
+        r"""
+        Extracted 1D spectrum from a list of apertures
+
+        Args:
+            :attr:`sky_aps` (list[sky_apertures])
+                List of sky apertures to use to extract one dimensional spectra
+        
+        Returns:
+            :attr:`spec_list` (list[spectrum])
+                List of spectrum objects corresponding to the input sky apertures
+        
+        """
+
         spec_list = []
         for sky_ap in sky_aps:
             # convert sky ap to pixel coordinates
