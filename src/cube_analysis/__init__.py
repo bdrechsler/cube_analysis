@@ -1,1 +1,2 @@
-from . import example
+from .Cube import Cube
+from .Spectrum import Spectrum

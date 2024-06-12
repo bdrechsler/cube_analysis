@@ -11,6 +11,12 @@ Welcome to cube_analysis's documentation!
    :caption: Contents:
 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Reference:
+
+   cube.rst
+   spectrum.rst
 
 Indices and tables
 ==================

@@ -6,33 +6,69 @@ import astropy.units as u
 from .Spectrum import Spectrum
 
 class Cube:
-    def __init__(self, path=None):
-        if path:
-            # read in data from fits file
-            data, header = fits.getdata(path, extname='SCI', header=True)
-            # data shape is (spectral, y, x)
+    r"""
+    A class to store the contents of a spectral data cube
 
-            # get wvl array from header info
-            start_wvl = header['CRVAL3']
-            wvl_step = header['CDELT3']
-            self.nchan = header['NAXIS3']
-            wvl = (np.arange(self.nchan) * wvl_step) + start_wvl
+    Base Attributes:
+        :attr:`flux` (numpy.ndarray):
+            Array of the flux values of the cube in units of Jy
+        :attr:`wvl` (nummpy.ndarray):
+            Wavelength of each channel in units of microns
+        :attr:`header` (fits header):
+            header of the original fits file
+        :attr:`wcs` (astropy wcs):
+            wcs object of the spectral cube
+        :attr:`spectra` (list[spectrum]):
+            list of 1D extracted spectra
+    
+    """
+    def __init__(self):
+        
+        self.flux = []
+        self.wvl = []
+        self.header = []
+        self.wcs = []
+        self.spectra = []
+        self.collapsed_img = []
+        self.collapsed_spec = []
 
-            # make sure units are in Jy
-            flux_units = header['BUNIT']
-            if flux_units == 'MJy/sr':
-                # pixel area in sr
-                pix_area = header['PIXAR_SR']
-                data *= pix_area * 1e6
-            
+    def read(self, path):
 
-            self.flux = data * u.Jy
-            self.wvl = wvl * u.um
-            self.header = header
-            self.wcs = WCS(header)
+        r"""
+        Read in spectral cube data from a fits file to populate base attributes
+        
+        Args:
+            :attr:`path` (str):
+                The path to the fits file
+        
+        """
 
-            # initially empty attributes
-            self.spectra = []
+        # read in data from fits file
+        data, header = fits.getdata(path, extname='SCI', header=True)
+        # data shape is (spectral, y, x)
+
+        # get wvl array from header info
+        start_wvl = header['CRVAL3']
+        wvl_step = header['CDELT3']
+        self.nchan = header['NAXIS3']
+        wvl = (np.arange(self.nchan) * wvl_step) + start_wvl
+
+        # make sure units are in Jy
+        flux_units = header['BUNIT']
+        if flux_units == 'MJy/sr':
+            # pixel area in sr
+            pix_area = header['PIXAR_SR']
+            data *= pix_area * 1e6
+        
+
+        self.flux = data * u.Jy
+        self.wvl = wvl * u.um
+        self.header = header
+        self.wcs = WCS(header)
+
+        self.collapsed_img = np.nansum(self.flux, axis=0)
+        self.collapsed_spec = np.nansum(self.flux, axis=(1,2))
+
 
     def extract_spectrum(self, sky_aps):
 

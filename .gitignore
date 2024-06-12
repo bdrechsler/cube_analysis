@@ -1,3 +1,6 @@
 build
 cube_analysis.egg-info
 __pychache__
+_build
+_static
+_templates
