@@ -20,6 +20,10 @@ class Cube:
             wcs object of the spectral cube
         :attr:`spectra` (list[spectrum]):
             list of 1D extracted spectra
+        :attr:`collapsed_img` (numpy.ndarray):
+            Representative image of the cube obtained by collapsing along the spectral axis
+        :attr:`collapsed_spec` (numpy.ndarray):
+            Representative spectrum of the cube obtained by collapsing along the spatial axes
     
     """
     def __init__(self):

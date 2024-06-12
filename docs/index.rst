@@ -15,8 +15,7 @@ Welcome to cube_analysis's documentation!
    :maxdepth: 1
    :caption: Package Reference:
 
-   cube.rst
-   spectrum.rst
+   api.rst
 
 Indices and tables
 ==================
