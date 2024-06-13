@@ -3,6 +3,9 @@ from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
 from photutils.aperture import EllipticalAperture, CircularAperture
+from photutils.centroids import centroid_com
+from scipy.signal import fftconvolve
+from scipy.ndimage import shift
 
 from .Spectrum import Spectrum
 
@@ -73,7 +76,7 @@ class Cube:
         self.header = header
         self.wcs = WCS(header)
 
-        self.collapsed_img = np.nansum(self.flux, axis=0)
+        self.collapsed_img = np.nanmedian(self.flux, axis=0)
         self.collapsed_spec = np.nansum(self.flux, axis=(1,2))
 
     def extract_spectrum(self, params_list):
@@ -127,3 +130,56 @@ class Cube:
             spec_list.append(spectrum)
         
         self.spectra = spec_list
+
+    def align(self, cube2, corr_box_dims=(4, 7)):
+        
+        # take the cross correlation
+        corr = fftconvolve(np.nan_to_num(cube2.collapsed_img), np.nan_to_num(self.collapsed_img[::-1, ::-1]),
+                           mode='same')
+        
+        # find index of peak of correlation
+        peak_ind = np.unravel_index(np.argmax(corr, axis=None), corr.shape)
+        x_peak = peak_ind[1]
+        y_peak = peak_ind[2]
+
+        # create a box around peak of correlation
+        size_x = corr_box_dims[0]
+        size_y = corr_box_dims[1]
+        corr_box = corr[y_peak - size_y: y_peak + size_y + 1,
+                        x_peak - size_x: x_peak + size_x + 1]
+        
+        # take centroid of box to get sub-pixel position of peak
+        box_cent = centroid_com(corr_box)
+
+        # get location of peak in entire array
+        x_peak = box_cent[0] + x_peak - size_x
+        y_peak = box_cent[1] + y_peak - size_y
+        
+        # get coordinates of the center of the array
+        x0 = (self.flux.shape[2] - 1) / 2.
+        y0 = (self.flux.shape[1] - 1) / 2.
+
+        # get offset from from center to get shift
+        x_offset = x_peak - x0
+        y_offset = y_peak - y0
+
+        shifted_flux = np.copy(self.flux)
+
+        # shift each channel
+        for i in range(len(self.wvl)):
+            shifted_flux[i] = shift(np.nan_to_num(self.flux[i]), [y_offset, x_offset],
+                                    cval=np.nan)
+        
+        shifted_cube = Cube()
+        shifted_cube.flux = shifted_flux
+        shifted_cube.wvl = self.wvl
+        shifted_cube.header = self.header
+        shifted_cube.wcs = self.wcs
+        shifted_cube.collapsed_img = np.nanmedian(shifted_flux, axis=0)
+        shifted_cube.collapsed_spec = np.nansum(shifted_flux, axis=(1, 2))
+        
+        return shifted_cube
+        
+
+
+        
