@@ -2,6 +2,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
+from photutils.aperture import EllipticalAperture, CircularAperture
 
 from .Spectrum import Spectrum
 
@@ -35,6 +36,8 @@ class Cube:
         self.spectra = []
         self.collapsed_img = []
         self.collapsed_spec = []
+        self.pixel_aps = []
+        self.sky_aps = []
 
     def read(self, path):
 
@@ -73,26 +76,37 @@ class Cube:
         self.collapsed_img = np.nansum(self.flux, axis=0)
         self.collapsed_spec = np.nansum(self.flux, axis=(1,2))
 
-
-    def extract_spectrum(self, sky_aps):
+    def extract_spectrum(self, params_list):
 
         r"""
         Extracted 1D spectrum from a list of apertures
 
         Args:
-            :attr:`sky_aps` (list[sky_apertures])
-                List of sky apertures to use to extract one dimensional spectra
-        
-        Returns:
-            :attr:`spec_list` (list[spectrum])
-                List of spectrum objects corresponding to the input sky apertures
+            :attr:`params_list` (list[dict])
+                Parameters to define apertures
         
         """
 
+        pixel_aps = []
+        sky_aps = []
+
+        for params in params_list:
+            if type(params) == dict:
+                if params["shape"] == "circle":
+                    pixel_ap = CircularAperture(params["pos"], params["r"])
+                if params["shape"] == "ellipse":
+                    pixel_ap = EllipticalAperture(params['pos'], params['a'], params['b'], params['theta'])
+                
+                self.pixel_aps.append(pixel_ap)
+                self.sky_aps.append(pixel_ap.to_sky(self.wcs.celestial))
+                
+            else:
+                self.sky_aps.append(params)
+                self.pixel_aps.append(params.to_pixel(self.wcs.celestial))
+
         spec_list = []
-        for sky_ap in sky_aps:
-            # convert sky ap to pixel coordinates
-            pix_ap = sky_ap.to_pixel(self.wcs.celestial)
+        for pix_ap in self.pixel_aps:
+
             # create a mask
             mask = pix_ap.to_mask(method='exact')
 
