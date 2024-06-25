@@ -2,7 +2,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
-from photutils.aperture import EllipticalAperture, CircularAperture
+import photutils.aperture as ap
 from photutils.centroids import centroid_com
 from scipy.signal import fftconvolve
 from scipy.ndimage import shift
@@ -76,13 +76,13 @@ class Cube:
         self.header = header
         self.wcs = WCS(header)
 
-        self.collapsed_img = np.nanmedian(self.flux, axis=0)
-        self.collapsed_spec = np.nansum(self.flux, axis=(1,2))
+        self.collapsed_img = np.nanmedian(self.flux.value, axis=0)
+        self.collapsed_spec = np.nansum(self.flux.value, axis=(1,2))
 
-    def extract_spectrum(self, params_list):
+    def extract_spectrum(self, aperture_list):
 
         r"""
-        Extracted 1D spectrum from a list of apertures
+        Extracted 1D spectrum from a list of apertures parameters
 
         Args:
             :attr:`params_list` (list[dict])
@@ -93,20 +93,14 @@ class Cube:
         pixel_aps = []
         sky_aps = []
 
-        for params in params_list:
-            if type(params) == dict:
-                if params["shape"] == "circle":
-                    pixel_ap = CircularAperture(params["pos"], params["r"])
-                if params["shape"] == "ellipse":
-                    pixel_ap = EllipticalAperture(params['pos'], params['a'], params['b'], params['theta'])
-                
-                self.pixel_aps.append(pixel_ap)
-                self.sky_aps.append(pixel_ap.to_sky(self.wcs.celestial))
-                
-            else:
-                self.sky_aps.append(params)
-                self.pixel_aps.append(params.to_pixel(self.wcs.celestial))
-
+        for aperture in aperture_list:
+            if isinstance(aperture, ap.EllipticalAperture) or isinstance(aperture, ap.CircularAperture):
+                pixel_aps.append(aperture)
+                sky_aps.append(aperture.to_sky(self.wcs.celestial))
+            elif isinstance(aperture, ap.SkyEllipticalAperture) or isinstance(aperture, ap.SkyCircularAperture):
+                pixel_aps.append(aperture.to_pixel(self.wcs))
+                sky_aps.append(aperture)
+        
         spec_list = []
         for pix_ap in self.pixel_aps:
 
@@ -131,7 +125,7 @@ class Cube:
         
         self.spectra = spec_list
 
-    def align(self, cube2, corr_box_dims=(4, 7)):
+    def combine(self, cube2, corr_box_dims=(4, 7)):
         
         # take the cross correlation
         corr = fftconvolve(np.nan_to_num(cube2.collapsed_img), np.nan_to_num(self.collapsed_img[::-1, ::-1]),
@@ -140,11 +134,11 @@ class Cube:
         # find index of peak of correlation
         peak_ind = np.unravel_index(np.argmax(corr, axis=None), corr.shape)
         x_peak = peak_ind[1]
-        y_peak = peak_ind[2]
+        y_peak = peak_ind[0]
 
         # create a box around peak of correlation
-        size_x = corr_box_dims[0]
-        size_y = corr_box_dims[1]
+        size_x = corr_box_dims[1]
+        size_y = corr_box_dims[0]
         corr_box = corr[y_peak - size_y: y_peak + size_y + 1,
                         x_peak - size_x: x_peak + size_x + 1]
         
@@ -163,20 +157,34 @@ class Cube:
         x_offset = x_peak - x0
         y_offset = y_peak - y0
 
-        shifted_flux = np.copy(self.flux)
+        combined_flux = np.copy(self.flux)
 
         # shift each channel
         for i in range(len(self.wvl)):
-            shifted_flux[i] = shift(np.nan_to_num(self.flux[i]), [y_offset, x_offset],
-                                    cval=np.nan)
-        
+            shifted_img = shift(np.nan_to_num(self.flux[i].value), [y_offset, x_offset],
+                                    cval=np.nan) * u.Jy
+            # cut off borders off
+            shifted_img[:4, :] = np.nan
+            shifted_img[-4:, :] = np.nan
+            shifted_img[:, :4] = np.nan
+            shifted_img[:, -4:] = np.nan
+
+            nan_inds_1 = np.where(np.isnan(cube2.flux[i]))
+            nan_inds_2 = np.where(np.isnan(shifted_img))
+
+            img_combined = np.nan_to_num(shifted_img) + np.nan_to_num(cube2.flux[i]) / 2.
+            img_combined[nan_inds_2] = cube2.flux[i][nan_inds_2]
+            img_combined[nan_inds_1] = np.nan
+            combined_flux[i] = img_combined
+
+            
         shifted_cube = Cube()
-        shifted_cube.flux = shifted_flux
+        shifted_cube.flux = img_combined
         shifted_cube.wvl = self.wvl
         shifted_cube.header = self.header
-        shifted_cube.wcs = self.wcs
-        shifted_cube.collapsed_img = np.nanmedian(shifted_flux, axis=0)
-        shifted_cube.collapsed_spec = np.nansum(shifted_flux, axis=(1, 2))
+        shifted_cube.wcs = cube2.wcs
+        shifted_cube.collapsed_img = np.nanmedian(combined_flux.value, axis=0)
+        shifted_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
         
         return shifted_cube
         
