@@ -28,6 +28,10 @@ class Cube:
             Representative image of the cube obtained by collapsing along the spectral axis
         :attr:`collapsed_spec` (numpy.ndarray):
             Representative spectrum of the cube obtained by collapsing along the spatial axes
+        :attr:`pixel_aps` (list[photutils apertures]):
+            List of pixel apertures used to extract spectra
+        :attr: `sky_aps` (list[photutils sky apertures]):
+            List of sky apertures used to extract spectra
     
     """
     def __init__(self):
@@ -82,10 +86,10 @@ class Cube:
     def extract_spectrum(self, aperture_list):
 
         r"""
-        Extracted 1D spectrum from a list of apertures parameters
+        Extract 1D spectrum from a list of apertures
 
         Args:
-            :attr:`params_list` (list[dict])
+            :attr:`params_list` (list[photutils apertures (sky or pixel)])
                 Parameters to define apertures
         
         """
@@ -123,6 +127,16 @@ class Cube:
         self.spectra = spec_list
 
     def __add__(self, cube2, corr_box_dims=(4, 7)):
+        r"""
+        Align then combine two spectral cubes:
+
+        Args:
+            :attr:`cube2` (Cube)
+                Second cube to combine with the first
+        Returns:
+            :attr:`combined_cube` (Cube)
+                averaged spectral cubes after alignment
+        """
 
         # take the cross correlation
         corr = fftconvolve(np.nan_to_num(self.collapsed_img), np.nan_to_num(cube2.collapsed_img[::-1, ::-1]),
@@ -175,15 +189,15 @@ class Cube:
             combined_flux[i] = img_combined
 
             
-        shifted_cube = Cube()
-        shifted_cube.flux = combined_flux
-        shifted_cube.wvl = self.wvl
-        shifted_cube.header = self.header
-        shifted_cube.wcs = self.wcs
-        shifted_cube.collapsed_img = np.nanmedian(combined_flux.value, axis=0)
-        shifted_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
+        combined_cube = Cube()
+        combined_cube.flux = combined_flux
+        combined_cube.wvl = self.wvl
+        combined_cube.header = self.header
+        combined_cube.wcs = self.wcs
+        combined_cube.collapsed_img = np.nanmedian(combined_flux.value, axis=0)
+        combined_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
         
-        return shifted_cube
+        return combined_cube
 
 
         
