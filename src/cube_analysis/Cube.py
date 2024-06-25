@@ -122,10 +122,10 @@ class Cube:
         
         self.spectra = spec_list
 
-    def combine(self, cube2, corr_box_dims=(4, 7)):
-        
+    def __add__(self, cube2, corr_box_dims=(4, 7)):
+
         # take the cross correlation
-        corr = fftconvolve(np.nan_to_num(cube2.collapsed_img), np.nan_to_num(self.collapsed_img[::-1, ::-1]),
+        corr = fftconvolve(np.nan_to_num(self.collapsed_img), np.nan_to_num(cube2.collapsed_img[::-1, ::-1]),
                            mode='same')
         
         # find index of peak of correlation
@@ -158,7 +158,7 @@ class Cube:
 
         # shift each channel
         for i in range(len(self.wvl)):
-            shifted_img = shift(np.nan_to_num(self.flux[i].value), [y_offset, x_offset],
+            shifted_img = shift(np.nan_to_num(cube2.flux[i].value), [y_offset, x_offset],
                                     cval=np.nan) * u.Jy
             # cut off borders off
             shifted_img[:4, :] = np.nan
@@ -166,11 +166,11 @@ class Cube:
             shifted_img[:, :4] = np.nan
             shifted_img[:, -4:] = np.nan
 
-            nan_inds_1 = np.where(np.isnan(cube2.flux[i]))
+            nan_inds_1 = np.where(np.isnan(self.flux[i]))
             nan_inds_2 = np.where(np.isnan(shifted_img))
 
-            img_combined = np.nan_to_num(shifted_img) + np.nan_to_num(cube2.flux[i]) / 2.
-            img_combined[nan_inds_2] = cube2.flux[i][nan_inds_2]
+            img_combined = np.nan_to_num(shifted_img) + np.nan_to_num(self.flux[i]) / 2.
+            img_combined[nan_inds_2] = self.flux[i][nan_inds_2]
             img_combined[nan_inds_1] = np.nan
             combined_flux[i] = img_combined
 
@@ -179,12 +179,11 @@ class Cube:
         shifted_cube.flux = combined_flux
         shifted_cube.wvl = self.wvl
         shifted_cube.header = self.header
-        shifted_cube.wcs = cube2.wcs
+        shifted_cube.wcs = self.wcs
         shifted_cube.collapsed_img = np.nanmedian(combined_flux.value, axis=0)
         shifted_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
         
         return shifted_cube
-        
 
 
         
