@@ -90,16 +90,13 @@ class Cube:
         
         """
 
-        pixel_aps = []
-        sky_aps = []
-
         for aperture in aperture_list:
             if isinstance(aperture, ap.EllipticalAperture) or isinstance(aperture, ap.CircularAperture):
-                pixel_aps.append(aperture)
-                sky_aps.append(aperture.to_sky(self.wcs.celestial))
+                self.pixel_aps.append(aperture)
+                self.sky_aps.append(aperture.to_sky(self.wcs.celestial))
             elif isinstance(aperture, ap.SkyEllipticalAperture) or isinstance(aperture, ap.SkyCircularAperture):
-                pixel_aps.append(aperture.to_pixel(self.wcs))
-                sky_aps.append(aperture)
+                self.pixel_aps.append(aperture.to_pixel(self.wcs))
+                self.sky_aps.append(aperture)
         
         spec_list = []
         for pix_ap in self.pixel_aps:
@@ -108,10 +105,10 @@ class Cube:
             mask = pix_ap.to_mask(method='exact')
 
             # initialize spectrum array
-            spectrum_flux = np.zeros(self.nchan)
+            spectrum_flux = np.zeros(len(self.wvl))
 
             # extract the 1D spectrum
-            for i in range(self.nchan):
+            for i in range(len(spectrum_flux)):
                 # get data of current channel
                 chan = self.flux[i, ...].value
                 # extract the data in the aperture
@@ -179,7 +176,7 @@ class Cube:
 
             
         shifted_cube = Cube()
-        shifted_cube.flux = img_combined
+        shifted_cube.flux = combined_flux
         shifted_cube.wvl = self.wvl
         shifted_cube.header = self.header
         shifted_cube.wcs = cube2.wcs
