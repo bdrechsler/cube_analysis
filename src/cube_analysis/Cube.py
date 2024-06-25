@@ -86,7 +86,7 @@ class Cube:
     def extract_spectrum(self, aperture_list):
 
         r"""
-        Extract 1D spectrum from a list of apertures
+        Extract 1D spectrum from a dictionary of photutil apertures
 
         Args:
             :attr:`params_list` (list[photutils apertures (sky or pixel)])
