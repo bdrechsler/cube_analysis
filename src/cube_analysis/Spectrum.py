@@ -19,6 +19,21 @@ class Spectrum:
         self.wvl = wvl
         self.flux = flux
 
+    def spectral_region(self, wvl1, wvl2):
+
+        inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+
+        return Spectrum(wvl=self.wvl[inds], flux=self.flux[inds])
+    
+    def spectral_region_from_center(self, wvl, width):
+
+        wvl1 = wvl - (width/2)
+        wvl2 = wvl + (width/2)
+        inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+
+        return Spectrum(wvl=self.wvl[inds], flux=self.flux[inds])
+
+
     def write(self, fname):
         r"""
         Write spectrum as a fits file
