@@ -132,6 +132,35 @@ class Cube:
         
         self.spectra = spec_list
 
+    def spectral_region(self, wvl1, wvl2, invert=False):
+
+        if invert:
+            inds = np.where((self.wvl < wvl1) | (self.wvl > wvl2))
+        else:
+            inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+
+        region_cube = copy.deepcopy(self)
+        region_cube.flux = self.flux[inds]
+        region_cube.wvl = self.wvl[inds]
+
+        return region_cube
+    
+    def spectral_region_from_center(self, wvl, width, invert=False)
+        
+        wvl1 = wvl - (width/2)
+        wvl2 = wvl + (width/2)
+
+        if invert:
+            inds = np.where((self.wvl < wvl1) | (self.wvl > wvl2))
+        else:
+            inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+
+        region_cube = copy.deepcopy(self)
+        region_cube.flux = self.flux[inds]
+        region_cube.wvl = self.wvl[inds]
+
+        return region_cube
+
     def __add__(self, cube2, corr_box_dims=(4, 7)):
         r"""
         Align then combine two spectral cubes:
@@ -201,6 +230,8 @@ class Cube:
 
         return combined_cube
     
- #   def create_maps(self, line, winsize=0.08*u.um):
+
+    
+    def create_maps(self, line, winsize=0.08*u.um):
         
         
