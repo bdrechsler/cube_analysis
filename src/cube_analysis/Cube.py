@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -193,16 +194,13 @@ class Cube:
             img_combined[nan_inds_1] = np.nan
             combined_flux[i] = img_combined
 
-            
-        combined_cube = Cube()
+        combined_cube = copy.deepcopy(self)
         combined_cube.flux = combined_flux
-        combined_cube.wvl = self.wvl
-        combined_cube.header = self.header
-        combined_cube.wcs = self.wcs
         combined_cube.collapsed_img = np.nanmedian(combined_flux.value, axis=0)
         combined_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
-        
+
         return combined_cube
     
-    def create_maps(self, line, winsize=0.08*u.um):
+ #   def create_maps(self, line, winsize=0.08*u.um):
+        
         
