@@ -126,7 +126,7 @@ class Cube:
                 spectrum_flux[i] = np.nansum(ap_data)
 
             # append to list of extracted spectra
-            spectrum = Spectrum(self.wvl, spectrum_flux)
+            spectrum = Spectrum(self.wvl, spectrum_flux * u.Jy)
             spec_list.append(spectrum)
         
         self.spectra = spec_list
@@ -204,7 +204,5 @@ class Cube:
         
         return combined_cube
     
-    def create_maps(self, line, winsize=0.08*u.um)
-
-
+    def create_maps(self, line, winsize=0.08*u.um):
         
