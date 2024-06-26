@@ -19,17 +19,23 @@ class Spectrum:
         self.wvl = wvl
         self.flux = flux
 
-    def spectral_region(self, wvl1, wvl2):
+    def spectral_region(self, wvl1, wvl2, invert=False):
 
-        inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+        if invert:
+            inds = np.where((self.wvl < wvl1) | (self.wvl > wvl2))
+        else:
+            inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
 
         return Spectrum(wvl=self.wvl[inds], flux=self.flux[inds])
     
-    def spectral_region_from_center(self, wvl, width):
+    def spectral_region_from_center(self, wvl, width, invert=False):
 
         wvl1 = wvl - (width/2)
         wvl2 = wvl + (width/2)
-        inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
+        if invert:
+            inds = np.where((self.wvl < wvl1) | (self.wvl > wvl2))
+        else:
+            inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
 
         return Spectrum(wvl=self.wvl[inds], flux=self.flux[inds])
 
