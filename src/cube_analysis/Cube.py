@@ -46,7 +46,8 @@ class Cube:
         self.pixel_aps = []
         self.sky_aps = []
 
-    def read(self, path):
+    @classmethod
+    def read(cls, path):
 
         r"""
         Read in spectral cube data from a fits file to populate base attributes
@@ -56,6 +57,8 @@ class Cube:
                 The path to the fits file
         
         """
+        
+        cube = cls()
 
         # read in data from fits file
         data, header = fits.getdata(path, extname='SCI', header=True)
@@ -64,8 +67,8 @@ class Cube:
         # get wvl array from header info
         start_wvl = header['CRVAL3']
         wvl_step = header['CDELT3']
-        self.nchan = header['NAXIS3']
-        wvl = (np.arange(self.nchan) * wvl_step) + start_wvl
+        nchan = header['NAXIS3']
+        wvl = (np.arange(nchan) * wvl_step) + start_wvl
 
         # make sure units are in Jy
         flux_units = header['BUNIT']
@@ -75,13 +78,15 @@ class Cube:
             data *= pix_area * 1e6
         
 
-        self.flux = data * u.Jy
-        self.wvl = wvl * u.um
-        self.header = header
-        self.wcs = WCS(header)
+        cube.flux = data * u.Jy
+        cube.wvl = wvl * u.um
+        cube.header = header
+        cube.wcs = WCS(header)
 
-        self.collapsed_img = np.nanmedian(self.flux.value, axis=0)
-        self.collapsed_spec = np.nansum(self.flux.value, axis=(1,2))
+        cube.collapsed_img = np.nanmedian(cube.flux.value, axis=0)
+        cube.collapsed_spec = np.nansum(cube.flux.value, axis=(1,2))
+
+        return cube
 
     def extract_spectrum(self, aperture_list):
 
@@ -198,6 +203,8 @@ class Cube:
         combined_cube.collapsed_spec = np.nansum(combined_flux.value, axis=(1, 2))
         
         return combined_cube
+    
+    def create_maps(self, line, winsize=0.08*u.um)
 
 
         
