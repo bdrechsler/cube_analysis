@@ -52,8 +52,9 @@ class Spectrum:
         
         smooth_flux = medfilt(just_continuum.flux.value, kernel_size=med_kernel)
         fit_params = np.polyfit(just_continuum.wvl.value, smooth_flux, fit_order)
+        continuum_flux = np.poly1d(fit_params) * u.Jy
 
-        return np.poly1d(fit_params)
+        return Spectrum(self.wvl, continuum_flux)
 
 
 
@@ -83,3 +84,9 @@ class Spectrum:
         spec_table = QTable.read(fname, format='fits')
         self.wvl = spec_table['Wavelength']
         self.flux = spec_table['Flux']
+
+    def __add__(self, spec2):
+        if self.wvl != spec2.wvl:
+            return "Error: Spectra have different wvl arrays"
+        else:
+            return Spectrum(self.wvl, self.flux + spec2.flux)
