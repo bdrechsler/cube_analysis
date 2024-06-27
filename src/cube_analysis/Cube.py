@@ -232,7 +232,7 @@ class Cube:
     
 
     
-    def create_maps(self, line, winsize=0.08*u.um):
+    def create_maps(self, line, winsize=0.08*u.um, method="peak"):
         
         win_cube = self.spectral_region_from_center(line.wvl, winsize)
 
@@ -245,6 +245,21 @@ class Cube:
             for j in range(nx):
                 spectrum = Spectrum(wvl=win_cube.wvl, flux=np.nan_to_num(win_cube.flux[:, i, j]))
                 continuum = spectrum.fit_continuum(ignore_regions=[(line.wvl, line.lw)])
+                cont_sub = spectrum - continuum
+                
+                cont_sub_just_line = cont_sub.spectral_region_from_center(line.wvl, line.lw)
+
+                if np.isnan(spectrum).all():
+                    line_map[i, j] = np.nan
+                    cont_map[i, j] = np.nan
+
+                else:
+                    if method == "peak":
+                        line_map[i, j] = np.nanmax(cont_sub_just_line.flux.value)
+                    elif method=="sum":
+                        line_map[i, j] = np.nansum(cont_sub_just_line.flux.value)
+
+                    cont_map[i, j] = np.nanmean(continuum)
                 
 
 
