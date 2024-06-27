@@ -1,6 +1,8 @@
+import copy
 import numpy as np
 import astropy.units as u
 from astropy.table import QTable
+from scipy.signal import medfilt
 
 class Spectrum:
 
@@ -38,6 +40,21 @@ class Spectrum:
             inds = np.where((self.wvl >= wvl1) & (self.wvl <= wvl2))
 
         return Spectrum(wvl=self.wvl[inds], flux=self.flux[inds])
+    
+    def fit_continuum(self, ignore_regions, med_kernel=3, fit_order=3, from_center=True):
+
+        just_continuum  = copy.deepcopy(self)
+        for region in ignore_regions:
+            if from_center:
+                just_continuum = just_continuum.spectral_region_from_center(region[0], region[1], invert=True)
+            else:
+                just_continuum = just_continuum.spectral_region(region[0], region[1], invert=True)
+        
+        smooth_flux = medfilt(just_continuum.flux.value, kernel_size=med_kernel)
+        fit_params = np.polyfit(just_continuum.wvl.value, smooth_flux, fit_order)
+
+        return np.poly1d(fit_params)
+
 
 
     def write(self, fname):

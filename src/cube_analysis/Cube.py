@@ -85,7 +85,7 @@ class Cube:
         cube.wcs = WCS(header)
 
         cube.collapsed_img = np.nanmedian(cube.flux.value, axis=0)
-        cube.collapsed_spec = np.nansum(cube.flux.value, axis=(1,2))
+        cube.collapsed_spec = Spectrum(cube.wvl, np.nansum(cube.flux.value, axis=(1,2))*u.Jy)
 
         return cube
 
@@ -145,7 +145,7 @@ class Cube:
 
         return region_cube
     
-    def spectral_region_from_center(self, wvl, width, invert=False)
+    def spectral_region_from_center(self, wvl, width, invert=False):
         
         wvl1 = wvl - (width/2)
         wvl2 = wvl + (width/2)
@@ -232,6 +232,20 @@ class Cube:
     
 
     
-    def create_maps(self, line, winsize=0.08*u.um):
+    # def create_maps(self, line, winsize=0.08*u.um):
         
-        
+    #     win_cube = self.spectral_region_from_center(line.wvl, winsize)
+
+    #     ny, nx = self.collapsed_img.shape
+
+    #     line_map = np.zeros((ny, nx))
+    #     cont_map = np.zeros((ny, nx))
+
+    #     for i in range(ny):
+    #         for j in range(nx):
+    #             spectrum = Spectrum(wvl=win_cube.wvl, flux=np.nan_to_num(win_cube.flux[:, i, j]))
+    #             just_continum = spectrum.spectral_region_from_center(line.wvl, line.lw, invert=True)
+
+
+
+
