@@ -28,7 +28,7 @@ class Cube:
             list of 1D extracted spectra
         :attr:`collapsed_img` (numpy.ndarray):
             Representative image of the cube obtained by collapsing along the spectral axis
-        :attr:`collapsed_spec` (numpy.ndarray):
+        :attr:`collapsed_spec` (spectrum):
             Representative spectrum of the cube obtained by collapsing along the spatial axes
         :attr:`pixel_aps` (list[photutils apertures]):
             List of pixel apertures used to extract spectra
@@ -42,11 +42,11 @@ class Cube:
         self.wvl = []
         self.header = []
         self.wcs = []
-        self.spectra = []
+        self.spectra = {}
         self.collapsed_img = []
         self.collapsed_spec = []
-        self.pixel_aps = []
-        self.sky_aps = []
+        self.pixel_aps = {}
+        self.sky_aps = {}
 
     @classmethod
     def read(cls, path):
@@ -80,6 +80,7 @@ class Cube:
             data *= pix_area * 1e6
         
 
+        # set cube attributes
         cube.flux = data * u.Jy
         cube.wvl = wvl * u.um
         cube.header = header
@@ -90,7 +91,7 @@ class Cube:
 
         return cube
 
-    def extract_spectrum(self, aperture_list):
+    def extract_spectrum(self, aperture_dict):
 
         r"""
         Extract 1D spectrum from a dictionary of photutil apertures
@@ -101,16 +102,17 @@ class Cube:
         
         """
 
-        for aperture in aperture_list:
+
+        for name, aperture in aperture_dict.items():
             if isinstance(aperture, ap.EllipticalAperture) or isinstance(aperture, ap.CircularAperture):
-                self.pixel_aps.append(aperture)
-                self.sky_aps.append(aperture.to_sky(self.wcs.celestial))
+                self.pixel_aps[name] = aperture
+                self.sky_aps[name] = aperture.to_sky(self.wcs.celestial)
             elif isinstance(aperture, ap.SkyEllipticalAperture) or isinstance(aperture, ap.SkyCircularAperture):
-                self.pixel_aps.append(aperture.to_pixel(self.wcs))
-                self.sky_aps.append(aperture)
+                self.pixel_aps[name] = aperture.to_pixel(self.wcs)
+                self.sky_aps[name] = aperture
         
-        spec_list = []
-        for pix_ap in self.pixel_aps:
+        spec_dict = {}
+        for name, pix_ap in self.pixel_aps.items():
 
             # create a mask
             mask = pix_ap.to_mask(method='exact')
@@ -129,9 +131,8 @@ class Cube:
 
             # append to list of extracted spectra
             spectrum = Spectrum(self.wvl, spectrum_flux * u.Jy)
-            spec_list.append(spectrum)
-        
-        self.spectra = spec_list
+            self.spectra[name] = spectrum
+            
 
     def spectral_region(self, wvl1, wvl2, invert=False):
 
