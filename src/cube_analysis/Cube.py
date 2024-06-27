@@ -250,7 +250,7 @@ class Cube:
                 
                 cont_sub_just_line = cont_sub.spectral_region_from_center(line.wvl, line.lw)
 
-                if np.isnan(spectrum).all():
+                if np.isnan(spectrum.flux).all():
                     line_map[i, j] = np.nan
                     cont_map[i, j] = np.nan
 
@@ -260,7 +260,7 @@ class Cube:
                     elif method=="sum":
                         line_map[i, j] = np.nansum(cont_sub_just_line.flux.value)
 
-                    cont_map[i, j] = np.nanmean(continuum)
+                    cont_map[i, j] = np.nanmean(continuum.flux.value)
         
         return Maps(line, line_map, cont_map)
                 

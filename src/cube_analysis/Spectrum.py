@@ -52,9 +52,9 @@ class Spectrum:
         
         smooth_flux = medfilt(just_continuum.flux.value, kernel_size=med_kernel)
         fit_params = np.polyfit(just_continuum.wvl.value, smooth_flux, fit_order)
-        continuum_flux = np.poly1d(fit_params) * u.Jy
+        continuum_flux = np.poly1d(fit_params)
 
-        return Spectrum(self.wvl, continuum_flux)
+        return Spectrum(self.wvl, continuum_flux(self.wvl.value) * u.Jy)
 
 
 
@@ -93,7 +93,7 @@ class Spectrum:
         
     def __sub__(self, spec2):
         if np.array_equal(self.wvl, spec2.wvl):
-            return Spectrum(self.wvl, self.wvl - spec2.wvl)
+            return Spectrum(self.wvl, self.flux - spec2.flux)
         else:
             new_wvls = np.setdiff1d(self.wvl, spec2.wvl)
             new_fluxes = self.flux[self.wvl==new_wvls]

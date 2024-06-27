@@ -3,12 +3,13 @@ import astropy.units as u
 
 class Line:
     def __init__(self, wvl, name, id=0, lw=0.013):
-        self.wvl = wvl * u.um
+        self.wvl = wvl
         self.name = name
-        self.chan = self.get_chan(wvl)
+        self.chan = self.get_chan(wvl.value)
         self.lw = lw * u.um
         self.id = id
 
+    @staticmethod
     def get_chan(wvl):
         chan_bounds =  {'nirspec': [2.8708948855637573, 5.269494898093398],
                         'ch1-long': [6.530400209798245, 7.649600181524875],
