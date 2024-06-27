@@ -232,19 +232,20 @@ class Cube:
     
 
     
-    # def create_maps(self, line, winsize=0.08*u.um):
+    def create_maps(self, line, winsize=0.08*u.um):
         
-    #     win_cube = self.spectral_region_from_center(line.wvl, winsize)
+        win_cube = self.spectral_region_from_center(line.wvl, winsize)
 
-    #     ny, nx = self.collapsed_img.shape
+        ny, nx = self.collapsed_img.shape
 
-    #     line_map = np.zeros((ny, nx))
-    #     cont_map = np.zeros((ny, nx))
+        line_map = np.zeros((ny, nx))
+        cont_map = np.zeros((ny, nx))
 
-    #     for i in range(ny):
-    #         for j in range(nx):
-    #             spectrum = Spectrum(wvl=win_cube.wvl, flux=np.nan_to_num(win_cube.flux[:, i, j]))
-    #             just_continum = spectrum.spectral_region_from_center(line.wvl, line.lw, invert=True)
+        for i in range(ny):
+            for j in range(nx):
+                spectrum = Spectrum(wvl=win_cube.wvl, flux=np.nan_to_num(win_cube.flux[:, i, j]))
+                continuum = spectrum.fit_continuum(ignore_regions=[(line.wvl, line.lw)])
+                
 
 
 

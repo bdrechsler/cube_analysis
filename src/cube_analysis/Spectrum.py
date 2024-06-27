@@ -86,7 +86,15 @@ class Spectrum:
         self.flux = spec_table['Flux']
 
     def __add__(self, spec2):
-        if self.wvl != spec2.wvl:
-            return "Error: Spectra have different wvl arrays"
-        else:
+        if np.array_equal(self.wvl, spec2.wvl):
             return Spectrum(self.wvl, self.flux + spec2.flux)
+        else:
+            return Spectrum(np.concatenate(self.wvl, spec2.wvl), np.concatenate(self.flux, spec2.flux))
+        
+    def __sub__(self, spec2):
+        if np.array_equal(self.wvl, spec2.wvl):
+            return Spectrum(self.wvl, self.wvl - spec2.wvl)
+        else:
+            new_wvls = np.setdiff1d(self.wvl, spec2.wvl)
+            new_fluxes = self.flux[self.wvl==new_wvls]
+            return Spectrum(new_wvls, new_fluxes)
