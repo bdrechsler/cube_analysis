@@ -9,6 +9,7 @@ from scipy.signal import fftconvolve
 from scipy.ndimage import shift
 
 from .Spectrum import Spectrum
+from .Maps import Maps
 
 class Cube:
     r"""
@@ -260,6 +261,8 @@ class Cube:
                         line_map[i, j] = np.nansum(cont_sub_just_line.flux.value)
 
                     cont_map[i, j] = np.nanmean(continuum)
+        
+        return Maps(line, line_map, cont_map)
                 
 
 
