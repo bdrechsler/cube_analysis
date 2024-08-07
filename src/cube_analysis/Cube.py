@@ -1,4 +1,5 @@
 import copy
+import pickle
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -49,7 +50,7 @@ class Cube:
         self.sky_aps = {}
 
     @classmethod
-    def read(cls, path):
+    def read_from_fits(cls, path):
 
         r"""
         Read in spectral cube data from a fits file to populate base attributes
@@ -90,6 +91,17 @@ class Cube:
         cube.collapsed_spec = Spectrum(cube.wvl, np.nansum(cube.flux.value, axis=(1,2))*u.Jy)
 
         return cube
+    
+    @classmethod
+    def load(cls, fname):
+        with open(fname, "rb") as f:
+            return pickle.load(f)
+    
+    def write(self, fname):
+
+        with open(fname, "wb") as f:
+            pickle.dump(self, f)
+
 
     def extract_spectrum(self, aperture_dict):
 
@@ -97,13 +109,14 @@ class Cube:
         Extract 1D spectrum from a dictionary of photutil apertures
 
         Args:
-            :attr:`params_list` (list[photutils apertures (sky or pixel)])
-                Parameters to define apertures
+            :attr:`aperture_dict` (dict))
+                Dictionary to define apertures used to extract spectra. In the format: {"name": aperture}
         
         """
 
-
+        # iterate through all the apertures in the dictionary
         for name, aperture in aperture_dict.items():
+            # check if provided aperture is a pixel or sky aperture and convert it accordingly
             if isinstance(aperture, ap.EllipticalAperture) or isinstance(aperture, ap.CircularAperture):
                 self.pixel_aps[name] = aperture
                 self.sky_aps[name] = aperture.to_sky(self.wcs.celestial)
@@ -111,12 +124,11 @@ class Cube:
                 self.pixel_aps[name] = aperture.to_pixel(self.wcs)
                 self.sky_aps[name] = aperture
         
-        spec_dict = {}
+        # iterate through all of the pixel apertures
         for name, pix_ap in self.pixel_aps.items():
-
             # create a mask
             mask = pix_ap.to_mask(method='exact')
-
+            
             # initialize spectrum array
             spectrum_flux = np.zeros(len(self.wvl))
 
@@ -129,13 +141,26 @@ class Cube:
                 # sum to get value for spectrum
                 spectrum_flux[i] = np.nansum(ap_data)
 
-            # append to list of extracted spectra
+            # add to the dictionary of 1D spectra
             spectrum = Spectrum(self.wvl, spectrum_flux * u.Jy)
             self.spectra[name] = spectrum
-            
+
 
     def spectral_region(self, wvl1, wvl2, invert=False):
+        r"""
+        Extract a spectral sub region from the spectral cube
 
+        Args:
+            :attr:`wvl1` (astropy.units.quantity)
+                lower wavelength of spectral region
+            :attr:`wvl2` (astropy.units.aquantity)
+                upper wavelength of spectral region
+            :attr:`invert` (bool)
+                if True, will consider the spectral region outside of given range
+        
+        """
+
+        # find the indicies either inside (or outside) the provided range
         if invert:
             inds = np.where((self.wvl < wvl1) | (self.wvl > wvl2))
         else:
