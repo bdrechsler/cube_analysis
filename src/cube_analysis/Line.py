@@ -1,11 +1,12 @@
 import astropy.units as u
+from astropy.table import Table
 
 
 class Line:
     def __init__(self, wvl, name, id=0, lw=0.013):
-        self.wvl = wvl
+        self.wvl = wvl * u.um
         self.name = name
-        self.chan = self.get_chan(wvl.value)
+        self.chan = self.get_chan(self.wvl.value)
         self.lw = lw * u.um
         self.id = id
 
@@ -32,3 +33,15 @@ class Line:
                 line_chan = chan
                 break
         return line_chan
+    
+    @staticmethod
+    def load_lines(list_file):
+        t = Table.read(list_file, format='ascii')
+        names = t["line_name"].data
+        wvls = t["wvl"].data
+        lws = t["lw"].data
+        ids = t["id"].data
+
+        line_list = [Line(wvls[i], names[i], ids[i], lws[i]) for i in range(len(names))]
+        return line_list
+        

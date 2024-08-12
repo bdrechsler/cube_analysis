@@ -121,7 +121,7 @@ class Cube:
                 self.pixel_aps[name] = aperture
                 self.sky_aps[name] = aperture.to_sky(self.wcs.celestial)
             elif isinstance(aperture, ap.SkyEllipticalAperture) or isinstance(aperture, ap.SkyCircularAperture):
-                self.pixel_aps[name] = aperture.to_pixel(self.wcs)
+                self.pixel_aps[name] = aperture.to_pixel(self.wcs.celestial)
                 self.sky_aps[name] = aperture
         
         # iterate through all of the pixel apertures
