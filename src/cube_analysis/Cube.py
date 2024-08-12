@@ -144,6 +144,8 @@ class Cube:
             # add to the dictionary of 1D spectra
             spectrum = Spectrum(self.wvl, spectrum_flux * u.Jy)
             self.spectra[name] = spectrum
+        
+        self.spectra["total"] = self.spectra["left"] + self.spectra["right"]
 
 
     def spectral_region(self, wvl1, wvl2, invert=False):
