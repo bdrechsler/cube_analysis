@@ -261,7 +261,9 @@ class Cube:
     
 
     
-    def create_maps(self, line, winsize=0.08*u.um, method="peak"):
+    def create_maps(self, line, method="peak"):
+
+        winsize = 6.*line.lw
         
         win_cube = self.spectral_region_from_center(line.wvl, winsize)
 
