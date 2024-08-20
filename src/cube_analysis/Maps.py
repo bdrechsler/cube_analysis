@@ -2,10 +2,11 @@ import numpy as np
 import pickle
 
 class Maps:
-    def __init__(self, line, line_map, cont_map):
+    def __init__(self, line, line_map, cont_map, wcs):
         self.line = line
         self.line_map = line_map
         self.cont_map = cont_map
+        self.wcs=wcs
 
         map_shape = np.shape(line_map)
         ratio_map = np.zeros(map_shape)

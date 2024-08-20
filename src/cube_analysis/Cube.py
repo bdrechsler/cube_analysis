@@ -292,7 +292,7 @@ class Cube:
 
                     cont_map[i, j] = np.nanmean(continuum.flux.value)
         
-        return Maps(line, line_map, cont_map)
+        return Maps(line, line_map, cont_map, wcs=self.wcs)
                 
 
 
