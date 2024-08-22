@@ -45,7 +45,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.0
         plot_map_flat = plot_map.flatten()
         plot_map_flat = plot_map_flat[~np.isnan(plot_map_flat)] # ignore nans
         vmin = np.percentile(plot_map_flat, 0.5)
-        vmax = np.perentile(plot_map_flat, 99.5)
+        vmax = np.percentile(plot_map_flat, 99.5)
 
         # get center and width of plot in pixel coords
         center_sky = SkyCoord(center[0] * u.deg, center[1] * u.deg, fname='icrs')
