@@ -37,7 +37,7 @@ class Line:
     
     @staticmethod
     def load_lines(list_file):
-        t = Table.read(list_file, delimeter=",", format='ascii')
+        t = Table.read(list_file, delimiter=",", format='ascii')
         names = t["line_name"].data
         plot_names = t["plot_name"].data
         wvls = t["wvl"].data

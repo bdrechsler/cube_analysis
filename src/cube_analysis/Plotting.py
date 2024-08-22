@@ -6,7 +6,7 @@ import astropy.units as u
 def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.00119):
     
     plt.close()
-    fig = plt.figure(4, 3, dpi=300, figsize=(12,14))
+    fig = plt.figure(dpi=300, figsize=(12,14))
     grid = fig.add_gridspec(4, 3, hspace=0., wspace=0.2)
 
     # get indicies of plots in the grid
