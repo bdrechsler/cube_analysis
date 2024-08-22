@@ -19,6 +19,7 @@ def map_grid(maps, map_type, center=(69.9744522, 26.0526275), width = 0.00119):
         line_map = map.line_map * 1e6
         cont_map = map.cont_map * 1e6
         ratio_map = map.ratio_map * 1e6
+        line_name = map.line.plot_name
         if map_type == "line":
             plot_map = line_map
         elif map_type == "ratio":
@@ -89,7 +90,7 @@ def map_grid(maps, map_type, center=(69.9744522, 26.0526275), width = 0.00119):
                 color="white", fontsize=12)
         
         # add line name to plot
-        ax.text(0.07, 0.92, line_names[i], ha="left", va="top",
+        ax.text(0.07, 0.92, line_name, ha="left", va="top",
                 transform = plt.gca().transAxes, color="white", 
                 fontsize=15)
         
