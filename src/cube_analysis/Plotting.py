@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-def map_grid(maps, map_type, center=(69.9744522, 26.0526275), width = 0.00119):
+def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.00119):
     
     plt.close()
     fig = plt.figure(4, 3, dpi=300, figsize=(12,14))
@@ -114,4 +114,4 @@ def map_grid(maps, map_type, center=(69.9744522, 26.0526275), width = 0.00119):
         ra.set_ticks(number=4)
         dec.set_ticks(number=4)
 
-    plt.show()
+    plt.savefig(fname)
