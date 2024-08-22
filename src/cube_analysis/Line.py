@@ -3,9 +3,10 @@ from astropy.table import Table
 
 
 class Line:
-    def __init__(self, wvl, name, id=0, lw=0.013):
+    def __init__(self, wvl, name, id=0, lw=0.013, plot_name=""):
         self.wvl = wvl * u.um
         self.name = name
+        self.plot_name = plot_name
         self.chan = self.get_chan(self.wvl.value)
         self.lw = lw * u.um
         self.id = id
@@ -36,12 +37,15 @@ class Line:
     
     @staticmethod
     def load_lines(list_file):
-        t = Table.read(list_file, format='ascii')
+        t = Table.read(list_file, delimeter=",", format='ascii')
         names = t["line_name"].data
+        plot_names = t["plot_name"].data
         wvls = t["wvl"].data
         lws = t["lw"].data
         ids = t["id"].data
 
-        line_list = [Line(wvls[i], names[i], ids[i], lws[i]) for i in range(len(names))]
+        plot_names_str = [r'{}'.format(str(x)) for x in plot_names]
+
+        line_list = [Line(wvls[i], names[i], ids[i], lws[i], plot_names_str[i]) for i in range(len(names))]
         return line_list
         
