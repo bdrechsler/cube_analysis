@@ -14,7 +14,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.0
     row_inds = row.flatten()
     col_inds = col.flatten()
 
-    for i in range(maps):
+    for i in range(len(maps)):
         map = maps[i]
         line_map = map.line_map * 1e6
         cont_map = map.cont_map * 1e6
