@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.00119):
+def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.00119):
     
     plt.close()
     fig = plt.figure(dpi=300, figsize=(12,14))
@@ -38,7 +38,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.0
         # get au per pixel for scale bar
         deg_per_pixel = header['CDELT1']
         arcsec_per_pix = (deg_per_pixel * u.deg).to(u.arcsec)
-        au_per_pix = arcsec_per_pix * 140. # multiply by distance in pc
+        au_per_pix = arcsec_per_pix.value * 140. # multiply by distance in pc
         pix_in_100au = 100 / au_per_pix
 
         # use percentile to get image stretch
@@ -48,7 +48,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.0
         vmax = np.percentile(plot_map_flat, 99.5)
 
         # get center and width of plot in pixel coords
-        center_sky = SkyCoord(center[0] * u.deg, center[1] * u.deg, fname='icrs')
+        center_sky = SkyCoord(center[0] * u.deg, center[1] * u.deg, frame='icrs')
         center_pix = wcs.world_to_pixel(center_sky)
         width_pix = width / deg_per_pixel
 
@@ -59,7 +59,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width = 0.0
         up = center_pix[1] + (0.5* width_pix)
 
         # add subplot to figure
-        ax = fig.add_subplot(grid[row_inds[i], col_inds[i]])
+        ax = fig.add_subplot(grid[row_inds[i], col_inds[i]], projection=wcs)
         # plot the map
         im = ax.imshow(np.nan_to_num(plot_map), origin="lower", cmap="magma", 
                        vmin=vmin, vmax=vmax)
