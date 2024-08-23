@@ -239,15 +239,15 @@ class Cube:
             shifted_img = shift(np.nan_to_num(cube2.flux[i].value), [y_offset, x_offset],
                                     cval=np.nan) * u.Jy
             # cut off borders off
-            shifted_img[:4, :] = np.nan
-            shifted_img[-4:, :] = np.nan
-            shifted_img[:, :4] = np.nan
-            shifted_img[:, -4:] = np.nan
+            shifted_img[:8, :] = np.nan
+            shifted_img[-8:, :] = np.nan
+            shifted_img[:, :8] = np.nan
+            shifted_img[:, -8:] = np.nan
 
             nan_inds_1 = np.where(np.isnan(self.flux[i]))
             nan_inds_2 = np.where(np.isnan(shifted_img))
 
-            img_combined = np.nan_to_num(shifted_img) + np.nan_to_num(self.flux[i]) / 2.
+            img_combined = (np.nan_to_num(shifted_img) + np.nan_to_num(self.flux[i])) / 2.
             img_combined[nan_inds_2] = self.flux[i][nan_inds_2]
             img_combined[nan_inds_1] = np.nan
             combined_flux[i] = img_combined

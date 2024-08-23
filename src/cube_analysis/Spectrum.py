@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 import astropy.units as u
-from astropy.table import QTable
+import pickle
 from scipy.signal import medfilt
 
 class Spectrum:
@@ -16,10 +16,11 @@ class Spectrum:
             Array of flux values of spectrum in Jy
     
     """
-    def __init__(self, wvl=[], flux=[]):
+    def __init__(self, wvl=[], flux=[], line=None):
 
         self.wvl = wvl
         self.flux = flux
+        self.line = line
 
     def spectral_region(self, wvl1, wvl2, invert=False):
 
@@ -58,32 +59,14 @@ class Spectrum:
 
 
 
+    @classmethod
+    def load(cls, fname):
+        with open(fname, "rb") as f:
+            return pickle.load(f)
+        
     def write(self, fname):
-        r"""
-        Write spectrum as a fits file
-
-        Args:
-            :attr:`fname` (str):
-                name of file to write spectrum to
-        
-        """
-        
-        spec_table = QTable([self.wvl, self.flux], 
-                            names=('Wavelength', 'Flux'))
-        spec_table.write(fname, format='fits')
-
-    def read(self, fname):
-        r"""
-        Read in spectrum from a fits file
-
-        Args:
-            :attr:`fname` (str):
-                name of file to read in spectrum from
-        
-        """
-        spec_table = QTable.read(fname, format='fits')
-        self.wvl = spec_table['Wavelength']
-        self.flux = spec_table['Flux']
+        with open(fname, "wb") as f:
+            pickle.dump(self, f)
 
     def __add__(self, spec2):
         if np.array_equal(self.wvl, spec2.wvl):
