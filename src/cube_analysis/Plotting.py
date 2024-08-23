@@ -115,3 +115,30 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.001
         dec.set_ticks(number=4)
 
     plt.savefig(fname)
+
+def spec_grid(specs, fname):
+
+    # create figure with gridspec grid
+    plt.close()
+    fig, axs = plt.subplots(4, 3, dpi=300, figsize=(12,14))
+
+    # get indicies of plots in the grid
+    row, col = np.indices((4, 3))
+    row_inds = row.flatten()
+    col_inds = col.flatten()
+
+    for i in range(len(specs)):
+        spec = specs[i]
+        line = spec.line
+        ax = axs[row_inds[i], col_inds[i]]
+        ax.step(spec.wvl, spec.flux*1000., color="black", where='mid') # convert flux to mJy
+        ax.axvline(line.wvl.value, ls="--", color="gray", alpha=0.7)
+        plt.text(0.07, 0.92, line.plot_name, ha="left", va="top",
+                transform=ax.transAxes, fontsize=15)
+        
+        if row_inds[i] == 3:
+            ax.set_xlabel(r"Wvl [$\mu$m]", fontsize=15)
+        if col_inds[i] == 0:
+            ax.set_ylabel("mJy", fontsize=15)
+    
+    plt.savefig(fname)
