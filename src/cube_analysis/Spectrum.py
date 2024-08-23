@@ -16,11 +16,10 @@ class Spectrum:
             Array of flux values of spectrum in Jy
     
     """
-    def __init__(self, wvl=[], flux=[], line=None):
+    def __init__(self, wvl=[], flux=[]):
 
         self.wvl = wvl
         self.flux = flux
-        self.line = line
 
     def spectral_region(self, wvl1, wvl2, invert=False):
 
@@ -56,7 +55,9 @@ class Spectrum:
         continuum_flux = np.poly1d(fit_params)
 
         return Spectrum(self.wvl, continuum_flux(self.wvl.value) * u.Jy)
-
+    
+    def attach_line(self, line):
+        self.line = line
 
 
     @classmethod
