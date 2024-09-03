@@ -1,8 +1,10 @@
 import copy
 import numpy as np
 import astropy.units as u
+from astropy.constants import c
 import pickle
 from scipy.signal import medfilt
+from astropy.modeling import models, fitting
 
 class Spectrum:
 
@@ -58,6 +60,20 @@ class Spectrum:
     
     def attach_line(self, line):
         self.line = line
+    
+    def get_line_flux(self):
+        if hasattr(self, "line"):
+            g_init = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=self.line.wvl.value,
+                                  stddev = self.line.lw.value/2.)
+            fitter = fitting.LevMarLSQFitter()
+            g = fitter(g_init, self.wvl.value, self.flux.value)
+            A = g.amplitude * u.Jy
+            sigma = (c / g.stddev*u.um).to(u.Hz)
+            line_flux = A * sigma / np.sqrt(2*np.pi)
+            self.line_model = g
+            self.line_flux = line_flux.to(u.erg/u.s/u.cm**2)
+        else:
+            print("No line attatched to spectrum")
 
 
     @classmethod

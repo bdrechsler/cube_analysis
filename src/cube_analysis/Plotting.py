@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.00119):
+def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.00119,
+             r_list=None, x_shifts=None, y_shifts=None, circle_plot=False):
     
     plt.close()
     fig = plt.figure(dpi=300, figsize=(12,14))
@@ -18,7 +19,7 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.001
         map = maps[i]
         line_map = map.line_map * 1e6
         cont_map = map.cont_map * 1e6
-        ratio_map = map.ratio_map * 1e6
+        ratio_map = map.ratio_map
         line_name = map.line.plot_name
         if map_type == "line":
             plot_map = line_map
@@ -34,6 +35,16 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.001
         sigma = np.nanstd(cont_map)
         # contour levels
         levels = [sigma, 3*sigma, 6*sigma]
+
+        # for ratio map, only consider data within a circle
+        if map_type == "ratio" and r_list:
+            if r_list[i] != 0:
+                x = np.arange(nx) - ((nx-1)/2.) - x_shifts[i]
+                y = np.arange(ny) - ((ny-1)/2.) - y_shifts[i]
+                X, Y = np.meshgrid(x, y)
+                r = np.hypot(X, Y)
+                bad_inds = np.where(r > r_list[i])
+                plot_map[bad_inds] = np.nan
 
         # get au per pixel for scale bar
         deg_per_pixel = header['CDELT1']
@@ -60,12 +71,25 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.001
 
         # add subplot to figure
         ax = fig.add_subplot(grid[row_inds[i], col_inds[i]], projection=wcs)
+        
+        if map_type == 'ratio' and r_list:
+            if circle_plot and r_list[i] != 0:
+                x0 = (nx-1) / 2.0 + x_shifts[i]
+                y0 = (ny-1) / 2.0 + y_shifts[i]
+                circle = plt.Circle((x0, y0), r_list[i], fill=False, edgecolor="gray", ls='--', alpha=0.8)
+                ax.add_patch(circle)
+        
         # plot the map
-        im = ax.imshow(np.nan_to_num(plot_map), origin="lower", cmap="magma", 
+        im = ax.imshow(plot_map, origin="lower", cmap="magma", 
                        vmin=vmin, vmax=vmax)
         # add continuum contours
         ax.contour(cont_map, levels=levels, colors="white", alpha=0.7,
                    linewidths=1.2)
+                    # optionally plot the circles for the ratio plot
+        
+
+
+
         # set the FOV
         ax.set_xlim(left, right)
         ax.set_ylim(down, up)
@@ -80,18 +104,23 @@ def map_grid(maps, map_type, fname, center=(69.9744522, 26.0526275), width=0.001
         # ending position of scalebar
         scalex2 = scalex1 + pix_in_100au
 
+        if map_type=="line":
+            text_color="white"
+        elif map_type=="ratio":
+            text_color="black"
+
         # plot the scale bar
         scale_x = np.linspace(scalex1, scalex2, 10)
         scale_y = [scaley1] * len(scale_x)
-        ax.plot(scale_x, scale_y, color="white")
+        ax.plot(scale_x, scale_y, color=text_color)
 
         # add text to scale bar
         ax.text(0.6, 0.13, "100 AU", transform=plt.gca().transAxes,
-                color="white", fontsize=12)
+                color=text_color, fontsize=12)
         
         # add line name to plot
         ax.text(0.07, 0.92, line_name, ha="left", va="top",
-                transform = plt.gca().transAxes, color="white", 
+                transform = plt.gca().transAxes, color=text_color, 
                 fontsize=15)
         
         # get ra and dec
@@ -141,4 +170,24 @@ def spec_grid(specs, fname):
         if col_inds[i] == 0:
             ax.set_ylabel("mJy", fontsize=15)
     
+    plt.savefig(fname)
+
+def hist_grid(maps, fname):
+    plt.close()
+    fig, axs = plt.subplots(4, 3, dpi=300, figsize=(12,14))
+
+    # get indicies of plots in the grid
+    row, col = np.indices((4, 3))
+    row_inds = row.flatten()
+    col_inds = col.flatten()
+
+    for i in range(len(maps)):
+        ratio_map = maps[i].ratio_map
+        ratio_map_flat = ratio_map.flatten()
+        line = maps[i].line
+        ax = axs[row_inds[i], col_inds[i]]
+        ax.hist(ratio_map_flat, bins=15)
+        plt.text(0.65, 0.92, line.plot_name, ha="left", va="top",
+                transform=ax.transAxes, fontsize=15)
+        
     plt.savefig(fname)
