@@ -68,7 +68,7 @@ class Spectrum:
             fitter = fitting.LevMarLSQFitter()
             g = fitter(g_init, self.wvl.value, self.flux.value)
             A = g.amplitude * u.Jy
-            sigma = (c / g.stddev*u.um).to(u.Hz)
+            sigma = (c / (g.stddev*u.um)).to(u.Hz)
             line_flux = A * sigma / np.sqrt(2*np.pi)
             self.line_model = g
             self.line_flux = line_flux.to(u.erg/u.s/u.cm**2)
