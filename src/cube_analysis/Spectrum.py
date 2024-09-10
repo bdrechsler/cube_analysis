@@ -60,18 +60,34 @@ class Spectrum:
     
     def attach_line(self, line):
         self.line = line
+        self.vel = ((c * (self.wvl - line.wvl)) / line.wvl).to(u.km/u.s)
     
-    def get_line_flux(self):
+    def get_line_flux(self, n_gauss=1, means=None):
         if hasattr(self, "line"):
-            g_init = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=self.line.wvl.value,
-                                  stddev = self.line.lw.value/2.)
             fitter = fitting.LevMarLSQFitter()
-            g = fitter(g_init, self.wvl.value, self.flux.value)
-            A = g.amplitude * u.Jy
-            sigma = ((g.stddev * u.um) * (c / self.line.wvl**2)).to(u.Hz)
-            line_flux = A * sigma * np.sqrt(2*np.pi)
+            if n_gauss==1:
+                g_init = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=self.line.wvl.value,
+                                  stddev = self.line.lw.value/2.)
+                g = fitter(g_init, self.wvl.value, self.flux.value)
+                A = g.amplitude * u.Jy
+                sigma = ((g.stddev * u.um) * (c / self.line.wvl**2)).to(u.Hz)
+                line_flux = A * sigma * np.sqrt(2*np.pi)
+            
+            elif n_gauss==2:
+                g_init_1 = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=means[0],
+                                            stddev=self.line.lw.value/6.)
+                g_init_2 = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=means[1],
+                                            stddev=self.line.lw.value/6.)
+                
+                g = fitter(g_init_1 + g_init_2, self.wvl.value, self.flux.value)
+                A1, A2 = g.amplitude_0 * u.Jy, g.amplitude_1 * u.Jy
+                sigma1 = ((g.stddev_0 * u.um) * (c / self.line.wvl**2)).to(u.Hz)
+                sigma2 = ((g.stddev_1 * u.um) * (c / self.line.wvl**2)).to(u.Hz)
+                line_flux = np.sqrt(2*np.pi) * (A1*sigma1 + A2*sigma2)
+            
             self.line_model = g
             self.line_flux = line_flux.to(u.erg/u.s/u.cm**2)
+
         else:
             print("No line attatched to spectrum")
 

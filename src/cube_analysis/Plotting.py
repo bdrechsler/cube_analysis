@@ -159,8 +159,15 @@ def spec_grid(specs, fname):
     for i in range(len(specs)):
         spec = specs[i]
         line = spec.line
+        
+        # get the gaussian fit to the line
+        line_model = spec.line_model
+        x_arr = np.linspace(np.nanmin(spec.wvl.value), np.nanmax(spec.wvl.value))
+        line_fit = line_model(x_arr)
+
         ax = axs[row_inds[i], col_inds[i]]
         ax.step(spec.wvl, spec.flux*1000., color="black", where='mid') # convert flux to mJy
+        ax.plot(x_arr, line_fit*1000, color="blue", ls="--")
         ax.axvline(line.wvl.value, ls="--", color="gray", alpha=0.7)
         plt.text(0.07, 0.92, line.plot_name, ha="left", va="top",
                 transform=ax.transAxes, fontsize=15)
@@ -172,7 +179,7 @@ def spec_grid(specs, fname):
     
     plt.savefig(fname)
 
-def hist_grid(maps, fname):
+def hist_grid(maps, fname, r_list=None, x_shifts=None, y_shifts=None):
     plt.close()
     fig, axs = plt.subplots(4, 3, dpi=300, figsize=(12,14))
 
@@ -183,6 +190,18 @@ def hist_grid(maps, fname):
 
     for i in range(len(maps)):
         ratio_map = maps[i].ratio_map
+        ny, nx = ratio_map.shape
+        
+        # for ratio map, only consider data within a circle:
+        if r_list[i] != 0:
+            x = np.arange(nx) - ((nx-1)/2.) - x_shifts[i]
+            y = np.arange(ny) - ((ny-1)/2.) - y_shifts[i]
+            X, Y = np.meshgrid(x, y)
+            r = np.hypot(X, Y)
+            bad_inds = np.where(r > r_list[i])
+            ratio_map[bad_inds] = np.nan
+
+
         ratio_map_flat = ratio_map.flatten()
         line = maps[i].line
         ax = axs[row_inds[i], col_inds[i]]
