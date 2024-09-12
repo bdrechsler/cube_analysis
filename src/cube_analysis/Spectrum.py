@@ -67,7 +67,7 @@ class Spectrum:
             fitter = fitting.LevMarLSQFitter()
             if n_gauss==1:
                 g_init = models.Gaussian1D(amplitude=np.nanmax(self.flux).value, mean=self.line.wvl.value,
-                                  stddev = self.line.lw.value/2.)
+                                stddev = self.line.lw.value/2.)
                 g = fitter(g_init, self.wvl.value, self.flux.value)
                 A = g.amplitude * u.Jy
                 sigma = ((g.stddev * u.um) * (c / self.line.wvl**2)).to(u.Hz)
@@ -86,7 +86,14 @@ class Spectrum:
                 line_flux = np.sqrt(2*np.pi) * (A1*sigma1 + A2*sigma2)
             
             self.line_model = g
-            self.line_flux = line_flux.to(u.erg/u.s/u.cm**2)
+            self.line_flux_fit = line_flux.to(u.erg/u.s/u.cm**2)
+            
+            line_spec = self.spectral_region_from_center(self.line.wvl, self.line.lw)
+            flux_sum = np.nansum(line_spec.flux)
+            dlam = self.wvl[1] - self.wvl[0]
+            dnu = (dlam * (c/ self.line.wvl**2)).to(u.Hz)
+            line_flux = flux_sum * dnu
+            self.line_flux_sum = line_flux.to(u.erg/u.s/u.cm**2)
 
         else:
             print("No line attatched to spectrum")

@@ -1,6 +1,7 @@
 import copy
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.wcs import WCS
 import astropy.units as u
@@ -296,5 +297,26 @@ class Cube:
                 
 
 
+    def plot_specs(self, fname=None):
+        plt.close()
+        for key in self.spectra:
+            spectrum = self.spectra[key]
+            plt.plot(spectrum.wvl, spectrum.flux, label=key)
+        plt.legend()
+        plt.xlabel(r"$\lambda$ [$\mu$m]")
+        plt.ylabel(r"$S_\nu$ [Jy]")
+        if fname:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
+    def plot_aps(self, fname=None):
+        plt.close()
+        plt.imshow(self.collapsed_img, origin="lower", cmap="magma")
+        for ap in self.pixel_aps.values():
+            ap.plot(color="white")
+        if fname:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
