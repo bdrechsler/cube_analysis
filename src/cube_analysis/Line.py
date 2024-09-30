@@ -3,13 +3,15 @@ from astropy.table import Table
 
 
 class Line:
-    def __init__(self, wvl, name, id=0, lw=0.013, plot_name=""):
+    def __init__(self, wvl, name, id=0, lw=0.013, Eu=None, Aul=None, plot_name=""):
         self.wvl = wvl * u.um
         self.name = name
         self.plot_name = plot_name
         self.chan = self.get_chan(self.wvl.value)
         self.lw = lw * u.um
         self.id = id
+        self.Eu = Eu * u.K
+        self.Aul = Aul * 1e-7 / u.s
 
     @staticmethod
     def get_chan(wvl):
